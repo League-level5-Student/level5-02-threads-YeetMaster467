@@ -21,23 +21,29 @@ public class AdvancedRobotRace {
 
 		}
 
-		Random r = new Random();
+		
+		Thread[] threadArr = new Thread[5];
 
 		for (int i = 0; i < 5; i++) {
 			Robot rob = robArr[i];
 			int threadID = i;
 			Thread t = new Thread(() -> {
-				while (rob.getY() < 10) {
+				while (rob.getY() > 50) {
+					Random r = new Random();
 					int num = r.nextInt(50);
 					rob.move(num);
-					if (rob.getY() < 10) {
-						//JOptionPane.showMessageDialog(null, "Congratulations! Robot #" + threadID + 1 + " has won!!");
+					if (rob.getY() < 50) {
+						JOptionPane.showMessageDialog(null, "Congratulations! Robot #" + threadID + 1 + " has won!!");
 						rob.sparkle();
 						// not sure how to wrap up
 					}
 				}
 			});
-			t.start();
+			threadArr[i] = t;
+		}
+		
+		for (int i = 0; i < threadArr.length; i++) {
+			threadArr[i].start();
 		}
 
 	}
