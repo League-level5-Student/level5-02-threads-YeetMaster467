@@ -1,17 +1,18 @@
 package _04_Thread_Pool;
 
+import java.lang.Thread.State;
 import java.util.ArrayDeque;
 
 public class WorkQueue implements Runnable {
 
 	private ArrayDeque<Job> jobQueue = new ArrayDeque<Job>();
 	private Thread[] threads;
-	private volatile boolean isRunning = true;
+	private static volatile boolean isRunning = true;
 
 	@Override
 	public void run() {
-		while (isRunning) {
-			System.out.println("Output from thread #" + Thread.currentThread().getId());
+		while (WorkQueue.isRunning) {
+			//System.out.println("Output from thread #" + Thread.currentThread().getId());
 			if (!performJob()) {
 				synchronized (jobQueue) {
 					try {
@@ -25,7 +26,7 @@ public class WorkQueue implements Runnable {
 	}
 
 	public WorkQueue() {
-		int totalThreads = Runtime.getRuntime().availableProcessors() - 1;
+		int totalThreads = Runtime.getRuntime().availableProcessors();
 		threads = new Thread[totalThreads];
 		for (int i = 0; i < threads.length; i++) {
 			threads[i] = new Thread(this);
@@ -38,7 +39,8 @@ public class WorkQueue implements Runnable {
 	}
 
 	public void shutdown() {
-		isRunning = false;
+		completeAllJobs();
+		WorkQueue.isRunning = false;
 		synchronized (jobQueue) {
 			jobQueue.notifyAll();
 		}
@@ -63,6 +65,18 @@ public class WorkQueue implements Runnable {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	public void completeAllJobs() {
+		while (!jobQueue.isEmpty()) {
+			performJob();
+		}
+		
+		for(int i = 0; i < threads.length; i++) {
+			if (threads[i].getState() != State.WAITING) {
+				i = -1;
+			}
 		}
 	}
 
