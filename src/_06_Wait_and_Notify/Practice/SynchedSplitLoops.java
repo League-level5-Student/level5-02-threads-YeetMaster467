@@ -22,12 +22,24 @@ public class SynchedSplitLoops {
 		Thread t1 = new Thread(() -> {
 			for(int i = 0; i < 100000; i++) {
 				counter++;
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					// XXX Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 		
 		Thread t2 = new Thread(() -> {
 			for(int i = 0; i < 100000; i++) {
 				System.out.println(counter);
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					// XXX Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 		

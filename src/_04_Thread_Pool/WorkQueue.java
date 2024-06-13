@@ -3,15 +3,17 @@ package _04_Thread_Pool;
 import java.lang.Thread.State;
 import java.util.ArrayDeque;
 
+// org.opentest4j.AssertionFailedError: array contents differ at index [201129984], expected: <-2> but was: <0>
+
 public class WorkQueue implements Runnable {
 
 	private ArrayDeque<Job> jobQueue = new ArrayDeque<Job>();
 	private Thread[] threads;
-	private static volatile boolean isRunning = true;
+	private volatile boolean isRunning = true;
 
 	@Override
 	public void run() {
-		while (WorkQueue.isRunning) {
+		while (isRunning) {
 			//System.out.println("Output from thread #" + Thread.currentThread().getId());
 			if (!performJob()) {
 				synchronized (jobQueue) {
@@ -26,7 +28,7 @@ public class WorkQueue implements Runnable {
 	}
 
 	public WorkQueue() {
-		int totalThreads = Runtime.getRuntime().availableProcessors();
+		int totalThreads = Runtime.getRuntime().availableProcessors() - 1;
 		threads = new Thread[totalThreads];
 		for (int i = 0; i < threads.length; i++) {
 			threads[i] = new Thread(this);
@@ -40,7 +42,7 @@ public class WorkQueue implements Runnable {
 
 	public void shutdown() {
 		completeAllJobs();
-		WorkQueue.isRunning = false;
+		isRunning = false;
 		synchronized (jobQueue) {
 			jobQueue.notifyAll();
 		}
@@ -59,12 +61,12 @@ public class WorkQueue implements Runnable {
 			if (!jobQueue.isEmpty()) {
 				j = jobQueue.remove();
 			}
-		}
-		if (j != null) {
-			j.perform();
-			return true;
-		} else {
-			return false;
+			if (j != null) {
+				j.perform();
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 	
@@ -72,7 +74,6 @@ public class WorkQueue implements Runnable {
 		while (!jobQueue.isEmpty()) {
 			performJob();
 		}
-		
 		for(int i = 0; i < threads.length; i++) {
 			if (threads[i].getState() != State.WAITING) {
 				i = -1;
